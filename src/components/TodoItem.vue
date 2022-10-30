@@ -1,120 +1,114 @@
 <template>
-  <input :class="className" ref="input" @focusout="forbiddenEditingTodoItem"
-         @keydown.enter="forbiddenEditingTodoItem"
-         v-model="title"
-         :disabled="!isAllowEditTodoItem"
-  />
-  <ul class="todo-item__buttons-list">
-    <li>
-      <button class="todo-item__button todo-item__button--edit" @click="allowEditingTodoItem">EDIT</button>
-    </li>
-    <li>
-      <button class="todo-item__button todo-item__button--done" @click="updateTodoItem(true)" :disabled="props.completed">DONE</button>
-    </li>
-    <li>
-      <button class="todo-item__button todo-item__button--delete" @click="deleteTodoItem">DELETE</button>
-    </li>
-  </ul>
+  <div class="todo" :class="todoState">
+    <input
+        v-show="editableMode"
+        @blur="doneEdit"
+        @keydown.enter="doneEdit"
+        @keydown.esc="doneEdit"
+        class="todo__input"
+        ref="input"
+        v-model="todo"
+    />
+    <p
+        class="todo__title"
+        @click="editTodo"
+        v-show="!editableMode">
+      {{ todo }}
+    </p>
+    <div class="todo__actions">
+      <button
+          class="button todo__button_done"
+          @click="toggleStateDone">
+        DONE
+      </button>
+      <button
+          class="button todo__button_delete"
+          @click="deleteTodo">
+        DELETE
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, toRefs, nextTick } from 'vue';
 
-const emit = defineEmits(['updateTodoItem', 'deleteTodoItem'])
-const props = defineProps({
-  title: {
-    type: String,
-    default: '',
+const emit = defineEmits(['deleteTodo']);
+const { todoData } = defineProps({
+  todoData: {
+    type: Object,
+    required: true,
   },
-  id: {
-    type: Number,
-    default: 0
-  },
-  completed: {
-    type: Boolean,
-    default: false,
-  }
-})
+});
 
-const title = ref(props.title)
-const isAllowEditTodoItem = ref(false)
-const input = ref(null)
+const { todo, completed, id } = toRefs(todoData);
+const editableMode = ref(false);
+const input = ref(null);
 
-const className = computed(() => {
-  const commonClass = 'todo-item__title'
-  const edit = isAllowEditTodoItem.value ? `${commonClass}--edit` : ''
-  const done = props.completed ? `${commonClass}--done` : ''
-  return `${commonClass} ${edit}${done}`
-})
+const todoState = computed(() => ({
+  'done': completed.value,
+}));
 
-const updateTodoItem = (isDone) => {
-  emit('updateTodoItem', props.id, isDone)
-}
+const toggleStateDone = () => {
+  completed.value = !completed.value;
+};
 
-const deleteTodoItem = () => {
-  emit('deleteTodoItem', props.id)
-}
+const deleteTodo = () => {
+  emit('deleteTodo', id.value);
+};
 
-const allowEditingTodoItem = () => {
-  isAllowEditTodoItem.value = true
-  nextTick(() => input.value.focus())
-}
-const forbiddenEditingTodoItem = () => {
-  isAllowEditTodoItem.value = false
-  if (props.completed) {
-    updateTodoItem(false)
-  }
-}
+const editTodo = () => {
+  editableMode.value = true;
+  nextTick(() => {
+    input.value.focus();
+  });
+};
+
+const doneEdit = () => {
+  editableMode.value = false;
+};
 
 </script>
 
+<style scoped lang="scss">
+.todo {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 2fr 1.3fr;
+  column-gap: .5rem;
+  grid-column: 1 / 3;
+  width: 100%;
 
-<style scoped>
-.todo-item__title {
-  display: flex;
-  min-width: min-content;
-  font-size: 1rem;
-  text-align: center;
-  justify-items: center;
-  background-color: transparent;
-  border: none;
-  color: black;
-  resize: none;
+  &__input {
+    padding: .3rem;
+  }
+
+  &__title {
+    max-width: 300px;
+    margin: 0;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    column-gap: .5rem;
+  }
+
+  &__button {
+    border-color: inherit;
+
+    &_done {
+      color: deeppink;
+    }
+  }
 }
 
-.todo-item__title--active {
-  border: 1px solid black;
-  cursor: pointer;
-}
-
-.todo-item__title--done {
-  text-decoration: line-through;
-}
-
-.todo-item__buttons-list {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  column-gap: 15px;
-  list-style: none;
-}
-
-.todo-item__button {
-  min-width: 100px;
-}
-
-.todo-item__button--edit {
-  border-color: #646cff;
-  color: #646cff;
-}
-
-.todo-item__button--done {
-  border-color: deeppink;
-  color: deeppink;
-}
-
-.todo-item__button--delete {
-  border-color: gray;
-  color: gray;
+.done {
+  .todo__title {
+    text-decoration: line-through;
+  }
 }
 </style>
