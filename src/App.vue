@@ -1,30 +1,36 @@
 <template>
   <div class="todo-list">
     <h1 class="todo-list__title">ToDo list</h1>
-    <div class="new-todo">
+    <div class="todo-list__new-todo new-todo">
       <input
-          class="new-todo__input"
-          @keydown.enter="addNewTodo"
-          type="text"
           v-model="newTodoTitle"
+          @keydown.enter="addNewTodo"
+          class="new-todo__input"
+          type="text"
           placeholder="Add TO DO">
       <button
-          class="button"
           @click="addNewTodo"
           @keydown.enter="addNewTodo"
-          :disabled="!isDisabledSubmitButton">
+          :disabled="!isDisabledSubmitButton"
+          class="new-todo__button button"
+      >
         ADD
       </button>
     </div>
-    <div class="todos"
-         v-if="todos.length">
-      <p class="todos__title">Task</p>
-      <p class="todos__title">Action</p>
+    <div
+        v-if="todos.length"
+        class="todo-list__todos todos"
+    >
+      <div class="todos__row row-header">
+        <div class="row-header__title">Task</div>
+        <div class="row-header__title">Action</div>
+      </div>
       <todo-item
-          v-for="item of todos"
-          :key="item.id"
-          :todoData="item"
+          v-for="todo of todos"
+          :key="todo.id"
+          :todo="todo"
           @delete-todo="deleteTodo"
+          class="todos__row"
       ></todo-item>
     </div>
     <p v-if="isLoading">Loading...</p>
@@ -32,23 +38,16 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import TodoItem from './components/TodoItem.vue';
 
-const isLoading = ref(true);
-const uniqueId = ref(0);
+const isLoading = ref(false);
 const newTodoTitle = ref('');
 const isDisabledSubmitButton = computed(() => !!newTodoTitle.value);
 const todos = ref([]);
 
-const setUniqueId = () => {
-  let max = 0;
-  todos.value.forEach(({ id }) => {
-    if (id > max) {
-      max = id;
-    }
-  });
-  uniqueId.value = max;
+const getUniqueId = () => {
+  return todos.value.reduce((acc, { id }) => acc > id ? acc : id, 0) + 1;
 };
 
 const getAllTodos = async () => {
@@ -56,26 +55,30 @@ const getAllTodos = async () => {
   return await res.json();
 };
 
-getAllTodos().then(data => {
+onMounted(async () => {
+  isLoading.value = true;
+  todos.value = (await getAllTodos()).todos;
   isLoading.value = false;
-  todos.value = data.todos;
-  setUniqueId();
 });
 
+const resetNewTodoTitle = () => {
+  newTodoTitle.value = '';
+}
+
 const addNewTodo = () => {
-  const id = uniqueId.value += 1;
   const newTodo = {
     todo: newTodoTitle.value,
-    id,
+    id: getUniqueId(),
     completed: false,
-    userId: id,
+    userId: 1,
   };
   todos.value.unshift(newTodo);
-  newTodoTitle.value = '';
+  resetNewTodoTitle();
 };
 
 const deleteTodo = (id) => {
-  todos.value = todos.value.filter(item => item.id !== id);
+  const index = todos.value.findIndex((todo) => todo.id === id);
+  todos.value.splice(index, 1);
 };
 </script>
 
@@ -114,15 +117,21 @@ const deleteTodo = (id) => {
 
 .todos {
   display: grid;
-  grid-template-columns: 2fr 1.3fr;
-  justify-items: center;
   row-gap: .5rem;
 
-  &__title {
-    font: {
-      weight: 600;
-    }
-    color: black;
+  &__row {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 2fr 1.3fr;
+    column-gap: .5rem;
   }
+}
+
+.row-header {
+  justify-items: center;
+  font: {
+    weight: 600;
+  }
+  color: black;
 }
 </style>
