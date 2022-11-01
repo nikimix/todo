@@ -4,15 +4,16 @@
     <div class="todo-list__new-todo new-todo">
       <input
           v-model="newTodoTitle"
-          @keydown.enter="addNewTodo"
           class="new-todo__input"
           type="text"
-          placeholder="Add TO DO">
-      <button
-          @click="addNewTodo"
+          placeholder="Add TO DO"
           @keydown.enter="addNewTodo"
+      >
+      <button
           :disabled="!isDisabledSubmitButton"
           class="new-todo__button button"
+          @keydown.enter="addNewTodo"
+          @click="addNewTodo"
       >
         ADD
       </button>
@@ -21,16 +22,16 @@
         v-if="todos.length"
         class="todo-list__todos todos"
     >
-      <div class="todos__row row-header">
-        <div class="row-header__title">Task</div>
-        <div class="row-header__title">Action</div>
+      <div class="todos__row">
+        <div>Task</div>
+        <div>Action</div>
       </div>
       <todo-item
           v-for="todo of todos"
           :key="todo.id"
           :todo="todo"
-          @delete-todo="deleteTodo"
           class="todos__row"
+          @delete-todo="deleteTodo"
       ></todo-item>
     </div>
     <p v-if="isLoading">Loading...</p>
@@ -38,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import TodoItem from './components/TodoItem.vue';
 
 const isLoading = ref(false);
@@ -47,7 +48,7 @@ const isDisabledSubmitButton = computed(() => !!newTodoTitle.value);
 const todos = ref([]);
 
 const getUniqueId = () => {
-  return todos.value.reduce((acc, { id }) => acc > id ? acc : id, 0) + 1;
+  return todos.value.reduce((acc, {id}) => acc > id ? acc : id, 0) + 1;
 };
 
 const getAllTodos = async () => {
@@ -63,7 +64,7 @@ onMounted(async () => {
 
 const resetNewTodoTitle = () => {
   newTodoTitle.value = '';
-}
+};
 
 const addNewTodo = () => {
   const newTodo = {
@@ -122,16 +123,13 @@ const deleteTodo = (id) => {
   &__row {
     display: grid;
     align-items: center;
+    justify-items: start;
     grid-template-columns: 2fr 1.3fr;
     column-gap: .5rem;
+    font: {
+      weight: 600;
+    }
+    color: black;
   }
-}
-
-.row-header {
-  justify-items: center;
-  font: {
-    weight: 600;
-  }
-  color: black;
 }
 </style>

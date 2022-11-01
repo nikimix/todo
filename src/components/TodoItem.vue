@@ -4,22 +4,22 @@
       class="todo"
   >
     <div
-        @input="updateTodoTitle"
         contenteditable="true"
         class="todo__title"
+        @input="updateTodoTitle"
     >
       {{title}}
     </div>
-    <div class="todo__controls todo-controls">
+    <div class="todo__controls controls">
       <button
+          class="controls__button button button_done"
           @click="toggleStateCompleted"
-          class="todo-controls__button todo-controls__button_done button "
       >
         DONE
       </button>
       <button
+          class="controls__button button"
           @click="deleteTodo"
-          class="todo-controls__button todo-controls__button_delete button"
       >
         DELETE
       </button>
@@ -73,18 +73,10 @@ const updateTodoTitle = (event) => {
   }
 }
 
-.todo-controls {
+.controls {
   display: flex;
   justify-content: space-between;
   column-gap: .5rem;
-
-  &__button {
-    border-color: inherit;
-
-    &_done {
-      color: deeppink;
-    }
-  }
 }
 
 .done {
